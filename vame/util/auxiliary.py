@@ -42,6 +42,7 @@ def create_config_template():
     \n
 # Data
     all_data:
+    normalize_data:
     \n
 # Creation of train set:
     egocentric_data: 

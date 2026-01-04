@@ -21,28 +21,25 @@ Licensed under GNU Lesser General Public License v3.0
 import os
 from pathlib import Path
 import shutil
+from datetime import datetime
+from vame.util import auxiliary
 
 def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
-    from datetime import datetime as dt
-    from vame.util import auxiliary
-    date = dt.today()
+    date = datetime.today()
     month = date.strftime("%B")
-    day = date.day
-    year = date.year
-    d = str(month[0:3]+str(day))
-    date = dt.today().strftime('%Y-%m-%d')
+    date_str = f"{month[:3]}{date.day}-{date.year}"
 
-    if working_directory == None:
+    if working_directory is None:
         working_directory = '.'
 
     wd = Path(working_directory).resolve()
-    project_name = '{pn}-{date}'.format(pn=project, date=d+'-'+str(year))
+    project_name = f"{project}-{date_str}"
 
     project_path = wd / project_name
 
 
     if project_path.exists():
-        print('Project "{}" already exists!'.format(project_path))
+        print(f'Project "{project_path}" already exists!')
         return
 
     video_path = project_path / 'videos'
@@ -52,24 +49,24 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
 
     for p in [video_path, data_path, results_path, model_path]:
         p.mkdir(parents=True)
-        print('Created "{}"'.format(p))
+        print(f'Created "{p}"')
 
     vids = []
     for i in videos:
         #Check if it is a folder
         if os.path.isdir(i):
             vids_in_dir = [os.path.join(i,vp) for vp in os.listdir(i) if videotype in vp]
-            vids = vids + vids_in_dir
+            vids.extend(vids_in_dir)
             if len(vids_in_dir)==0:
                 print("No videos found in",i)
                 print("Perhaps change the videotype, which is currently set to:", videotype)
             else:
-                videos = vids
                 print(len(vids_in_dir)," videos from the directory" ,i, "were added to the project.")
         else:
             if os.path.isfile(i):
-                vids = vids + [i]
-            videos = vids
+                vids.append(i)
+    
+    videos = vids
 
 
     videos = [Path(vp) for vp in videos]
@@ -91,15 +88,14 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
 
     destinations = [video_path.joinpath(vp.name) for vp in videos]
 
-    os.mkdir(str(project_path)+'/'+'videos/pose_estimation/')
-    os.mkdir(str(project_path)+'/model/pretrained_model')
+    (video_path / 'pose_estimation').mkdir(parents=True, exist_ok=True)
+    (model_path / 'pretrained_model').mkdir(parents=True, exist_ok=True)
 
     print("Copying the videos \n")
     # for src, dst in zip(videos, destinations):
     #     shutil.copy(os.fspath(src),os.fspath(dst))
 
-    cfg_file,ruamelFile = auxiliary.create_config_template()
-    cfg_file
+    cfg_file, _ = auxiliary.create_config_template()
 
     cfg_file['Project']=str(project)
     cfg_file['project_path']=str(project_path)+'/'
@@ -108,8 +104,9 @@ def init_new_project(project, videos, working_directory=None, videotype='.mp4'):
     cfg_file['all_data']='yes'
     cfg_file['load_data']='-PE-seq-clean'
     cfg_file['anneal_function']='linear'
-    cfg_file['normalize_data'] = False
+    cfg_file['normalize_data'] = True
     cfg_file.yaml_add_eol_comment('If true, the data is normalized (z-scored) in the dataloader', 'normalize_data')
+   
     cfg_file['batch_size']=256
     cfg_file['max_epochs']=500
     cfg_file['transition_function']='GRU'

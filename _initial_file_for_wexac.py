@@ -73,7 +73,7 @@ def main_menu(data):
 if __name__ == "__main__":
     
     user_data = {}
-    user_data['choice'] = '9'  
+    user_data['choice'] = '1'  
     user_data['working_directory'] = '/home/labs/kimchi/cfsilvia/Blind_mole/Motifs_Detection/' 
     user_data['project']='BMR-VAME-Project'
     user_data['videos'] = ['/home/labs/kimchi/cfsilvia/Blind_mole/Motifs_Detection//original_data/BMR10_with_landmarks_left.xlsx']  # it is inside the working directory in original_data and the video in original_videos
