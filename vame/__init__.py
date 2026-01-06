@@ -37,6 +37,7 @@ from vame.util.create_file_for_vame import create_file_for_vame
 #from vame.etoghram import etoghram
 from vame.util.auxiliary import read_config
 from vame.analysis.plot_losses import plot_losses
+from vame.Gui.plot_feature_reconstruction import plot_feature_reconstruction
 
 
 

@@ -90,124 +90,153 @@ def gaussian(ins, is_training, seq_len, std_n=0.8):
         return ins + (noise*emp_std)
     return ins
 
-
+'''
+Training function for VAME model
+'''
 def train(train_loader, epoch, model, optimizer, anneal_function, BETA, kl_start,
           annealtime, seq_len, future_decoder, future_steps, scheduler, mse_red, 
           mse_pred, kloss, klmbda, bsize, noise):
-    model.train() # toggle model to train mode
-    train_loss = 0.0
-    mse_loss = 0.0
-    kullback_loss = 0.0
-    kmeans_losses = 0.0
-    fut_loss = 0.0
-    loss = 0.0
+    model.train()
+    
+    # Initialize accumulators
+    total_train_loss = 0.0
+    total_mse_loss = 0.0
+    total_kl_loss = 0.0
+    total_kmeans_loss = 0.0
+    total_fut_loss = 0.0
+    
     seq_len_half = int(seq_len / 2)
+    device = torch.device("cuda" if use_gpu else "cpu")
 
-    for idx, data_item in enumerate(train_loader):
-        data_item = Variable(data_item)
-        data_item = data_item.permute(0,2,1)
+    for batch_idx, data_item in enumerate(train_loader):
+        # Prepare data: [batch, seq_len, features] -> [batch, features, seq_len]
+        data_item = data_item.permute(0, 2, 1).float().to(device)
 
-        if use_gpu:
-            data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
-            fut = data_item[:,seq_len_half:seq_len_half+future_steps,:].type('torch.FloatTensor').cuda()
+        data = data_item[:, :seq_len_half, :]
+        fut = data_item[:, seq_len_half:seq_len_half+future_steps, :]
+
+        if noise:
+            data_input = gaussian(data, True, seq_len_half)
         else:
-            data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').to()
-            fut = data_item[:,seq_len_half:seq_len_half+future_steps,:].type('torch.FloatTensor').to()
-        if noise == True:
-            data_gaussian = gaussian(data,True,seq_len_half)
-        else:
-            data_gaussian = data
+            data_input = data
 
+        # Forward pass
         if future_decoder:
-            data_tilde, future, latent, mu, logvar = model(data_gaussian)
-
-            rec_loss = reconstruction_loss(data, data_tilde, mse_red)
+            data_tilde, future, latent, mu, logvar = model(data_input)
             fut_rec_loss = future_reconstruction_loss(fut, future, mse_pred)
-            kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
-            kl_loss = kullback_leibler_loss(mu, logvar)
-            kl_weight = kl_annealing(epoch, kl_start, annealtime, anneal_function)
-            loss = rec_loss + fut_rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss
-            fut_loss += fut_rec_loss.item()
-
         else:
-            data_tilde, latent, mu, logvar = model(data_gaussian)
+            data_tilde, latent, mu, logvar = model(data_input)
+            fut_rec_loss = torch.tensor(0.0, device=device)
 
-            rec_loss = reconstruction_loss(data, data_tilde, mse_red)
-            kl_loss = kullback_leibler_loss(mu, logvar)
-            kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
-            kl_weight = kl_annealing(epoch, kl_start, annealtime, anneal_function)
-            loss = rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss
+        # Calculate losses
+        rec_loss = reconstruction_loss(data, data_tilde, mse_red)
+        kl_loss = kullback_leibler_loss(mu, logvar)
+        kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
+        
+        kl_weight = kl_annealing(epoch, kl_start, annealtime, anneal_function)
+        
+        loss = rec_loss + (BETA * kl_weight * kl_loss) + (kl_weight * kmeans_loss)
+        if future_decoder:
+            loss += fut_rec_loss
         
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         
-        # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 5)
+        # Accumulate metrics
+        total_train_loss += loss.item()
+        total_mse_loss += rec_loss.item()
+        total_kl_loss += kl_loss.item()
+        total_kmeans_loss += kmeans_loss.item()
+        if future_decoder:
+            total_fut_loss += fut_rec_loss.item()
 
-        train_loss += loss.item()
-        mse_loss += rec_loss.item()
-        kullback_loss += kl_loss.item()
-        kmeans_losses += kmeans_loss.item()
+    # Calculate averages
+    num_batches = len(train_loader)
+    avg_train_loss = total_train_loss / num_batches
+    avg_mse_loss = total_mse_loss / num_batches
+    avg_kl_loss = total_kl_loss / num_batches
+    avg_kmeans_loss = total_kmeans_loss / num_batches
+    avg_fut_loss = total_fut_loss / num_batches
 
-        # if idx % 1000 == 0:
-        #     print('Epoch: %d.  loss: %.4f' %(epoch, loss.item()))
-   
-    scheduler.step(loss) #be sure scheduler is called before optimizer in >1.1 pytorch
+    # Step scheduler
+    if isinstance(scheduler, ReduceLROnPlateau):
+        scheduler.step(avg_train_loss)
+    else:
+        scheduler.step()
+
+    # Logging
+    weighted_kl = BETA * kl_weight * avg_kl_loss
+    weighted_kmeans = kl_weight * avg_kmeans_loss
 
     if future_decoder:
-        print('Train loss: {:.3f}, MSE-Loss: {:.3f}, MSE-Future-Loss {:.3f}, KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}, weight: {:.2f}'.format(train_loss / idx,
-              mse_loss /idx, fut_loss/idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx, kl_weight))
+        print('Train loss: {:.3f}, MSE-Loss: {:.3f}, MSE-Future-Loss {:.3f}, '
+              'KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}, weight: {:.2f}'.format(
+              avg_train_loss, avg_mse_loss, avg_fut_loss, weighted_kl, weighted_kmeans, kl_weight))
     else:
-        print('Train loss: {:.3f}, MSE-Loss: {:.3f}, KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}, weight: {:.2f}'.format(train_loss / idx,
-              mse_loss /idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx, kl_weight))
+        print('Train loss: {:.3f}, MSE-Loss: {:.3f}, KL-Loss: {:.3f}, '
+              'Kmeans-Loss: {:.3f}, weight: {:.2f}'.format(
+              avg_train_loss, avg_mse_loss, weighted_kl, weighted_kmeans, kl_weight))
 
-    return kl_weight, train_loss/idx, kl_weight*kmeans_losses/idx, kullback_loss/idx, mse_loss/idx, fut_loss/idx
+    return kl_weight, avg_train_loss, weighted_kmeans, avg_kl_loss, avg_mse_loss, avg_fut_loss
 
-
+'''
+test function for VAME model
+'''
 def test(test_loader, epoch, model, optimizer, BETA, kl_weight, seq_len, mse_red, kloss, klmbda, future_decoder, bsize):
     model.eval() # toggle model to inference mode
-    test_loss = 0.0
-    mse_loss = 0.0
-    kullback_loss = 0.0
-    kmeans_losses = 0.0
-    loss = 0.0
+    
+    # Initialize accumulators
+    total_test_loss = 0.0
+    total_mse_loss = 0.0
+    total_kl_loss = 0.0
+    total_kmeans_loss = 0.0
+    
     seq_len_half = int(seq_len / 2)
+    device = torch.device("cuda" if use_gpu else "cpu")
 
     with torch.no_grad():
-        for idx, data_item in enumerate(test_loader):
-            # we're only going to infer, so no autograd at all required
-            data_item = Variable(data_item)
-            data_item = data_item.permute(0,2,1)
-            if use_gpu:
-                data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').cuda()
-            else:
-                data = data_item[:,:seq_len_half,:].type('torch.FloatTensor').to()
+        for data_item in test_loader:
+            # Prepare data: [batch, seq_len, features] -> [batch, features, seq_len]
+            data_item = data_item.permute(0, 2, 1).float().to(device)
+            data = data_item[:, :seq_len_half, :]
 
+            # Forward pass
             if future_decoder:
                 recon_images, _, latent, mu, logvar = model(data)
-                rec_loss = reconstruction_loss(data, recon_images, mse_red)
-                kl_loss = kullback_leibler_loss(mu, logvar)
-                kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
-                loss = rec_loss + BETA*kl_weight*kl_loss+ kl_weight*kmeans_loss
-
             else:
                 recon_images, latent, mu, logvar = model(data)
-                rec_loss = reconstruction_loss(data, recon_images, mse_red)
-                kl_loss = kullback_leibler_loss(mu, logvar)
-                kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
-                loss = rec_loss + BETA*kl_weight*kl_loss + kl_weight*kmeans_loss
 
-            # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm = 5)
+            # Calculate losses
+            rec_loss = reconstruction_loss(data, recon_images, mse_red)
+            kl_loss = kullback_leibler_loss(mu, logvar)
+            kmeans_loss = cluster_loss(latent.T, kloss, klmbda, bsize)
+            
+            loss = rec_loss + (BETA * kl_weight * kl_loss) + (kl_weight * kmeans_loss)
 
-            test_loss += loss.item()
-            mse_loss += rec_loss.item()
-            kullback_loss += kl_loss.item()
-            kmeans_losses += kmeans_loss
+            # Accumulate metrics
+            total_test_loss += loss.item()
+            total_mse_loss += rec_loss.item()
+            total_kl_loss += kl_loss.item()
+            total_kmeans_loss += kmeans_loss.item()
 
-    print('Test loss: {:.3f}, MSE-Loss: {:.3f}, KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}'.format(test_loss / idx,
-          mse_loss /idx, BETA*kl_weight*kullback_loss/idx, kl_weight*kmeans_losses/idx))
+    # Calculate averages
+    num_batches = len(test_loader)
+    if num_batches > 0:
+        avg_test_loss = total_test_loss / num_batches
+        avg_mse_loss = total_mse_loss / num_batches
+        avg_kl_loss = total_kl_loss / num_batches
+        avg_kmeans_loss = total_kmeans_loss / num_batches
+    else:
+        avg_test_loss = avg_mse_loss = avg_kl_loss = avg_kmeans_loss = 0.0
 
-    return mse_loss /idx, test_loss/idx, kl_weight*kmeans_losses
+    weighted_kl = BETA * kl_weight * avg_kl_loss
+    weighted_kmeans = kl_weight * avg_kmeans_loss
+
+    print('Test loss: {:.3f}, MSE-Loss: {:.3f}, KL-Loss: {:.3f}, Kmeans-Loss: {:.3f}'.format(
+          avg_test_loss, avg_mse_loss, weighted_kl, weighted_kmeans))
+
+    return avg_mse_loss, avg_test_loss, weighted_kmeans
 
 ###########################################################
 #-----------------------------Auxiliarty functions of main function --------------------------------------------------------

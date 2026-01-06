@@ -36,26 +36,8 @@ def traindata_fixed(cfg, files, testfraction, num_features, savgol_filter, check
         print("z- scoring with x and y separately %s" %file)
         path_to_file = os.path.join(cfg['project_path'],"data", file, file+'-PE-seq.npy')
         data = np.load(path_to_file)
-        #normalize the data first time x and y axis separately
-        # X_mean_x = np.mean((data.T)[:,::2], axis = None)
-        # X_mean_y = np.mean((data.T)[:,1::2], axis = None)
-
-        # X_std_x= np.std((data.T)[:,::2], axis = None)
-        # X_std_y = np.std((data.T)[:,1::2], axis = None)
-       
 
         X_z = data.T.copy()
-       
-        
-        # X_z[:,::2] = (X_z[:,::2] - X_mean_x) / X_std_x #normalize the data for each feature
-        # X_z[:,1::2] = (X_z[:,1::2] - X_mean_y) / X_std_y
-
-        # #normalize second time all together
-        # X_mean = np.mean((X_z), axis = None)
-        # X_std= np.std((X_z), axis = None)
-        # X_z = (X_z - X_mean) / X_std
-
-        
 
         
         X_len = len(data.T)
@@ -101,11 +83,8 @@ def create_trainset(config, check_parameter=False):
             use_file = input("Do you want to train on " + file + "? yes/no: ")
             if use_file == 'yes':
                 files.append(file)
-            if use_file == 'no':
-                continue
     else:
-        for file in cfg['video_sets']:
-            files.append(file)
+        files = list(cfg['video_sets'])
 
     print("Creating training dataset...")
     
