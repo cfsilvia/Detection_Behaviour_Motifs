@@ -63,7 +63,12 @@ def main_menu(data):
         ##plot kloss
           obj = vame.plot_losses(data['config']) 
           obj()    
-            
+        case '14':
+               #plot reconstruction given the name of the feature
+               obj = vame.plot_feature_reconstruction(data['config'])
+               obj()
+
+   
 
         case _:
              return "Invalid option"
