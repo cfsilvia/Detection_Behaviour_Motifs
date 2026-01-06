@@ -64,7 +64,7 @@ def main_menu(data):
           obj = vame.plot_losses(data['config']) 
           obj()    
         case '14':
-               #plot reconstruction given the name of the feature
+               #gui for plotting reconstruction given the name of the feature
                obj = vame.plot_feature_reconstruction(data['config'])
                obj()
 
@@ -78,7 +78,7 @@ def main_menu(data):
 if __name__ == "__main__":
     
     user_data = {}
-    user_data['choice'] = '6'  
+    user_data['choice'] = '14'  
     user_data['working_directory'] = 'D:/Silvia/Data/28_12_2025/' 
     user_data['project']='BMR-VAME-Project'
     user_data['videos'] = ['D:/Silvia/Data/28_12_2025/original_data/BMR10_with_landmarks_left.xlsx']  # it is inside the working directory in original_data and the video in original_videos

@@ -16,7 +16,7 @@ import os
 
 
 class SEQUENCE_DATASET(Dataset):
-    def __init__(self, path_to_file, data, train, temporal_window, normalize=True):
+    def __init__(self, path_to_file, data, train, temporal_window, normalize):
         self.temporal_window = temporal_window
         
         file_path = os.path.join(path_to_file, data)
