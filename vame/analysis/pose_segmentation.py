@@ -136,8 +136,10 @@ class  pose_segmentation:
         if self.parameterization == "kmeans":
             print("Using kmeans as parameterization!")
             kmeans = KMeans(init='k-means++', n_clusters = self.n_cluster, random_state=42, n_init=20).fit(latent_vector_cat)
+            kmeans = KMeans(init='k-means++', n_clusters=self.n_cluster, random_state=random_state, n_init=n_init).fit(latent_vector_cat)
             clust_center = kmeans.cluster_centers_
             label = kmeans.predict(latent_vector_cat)
+            label = kmeans.labels_
         elif self.parameterization == "hmm":
             print("Using a HMM as parameterization!")
             hmm_model = hmm.GaussianHMM(n_components = self.n_cluster, covariance_type="full", n_iter=100)

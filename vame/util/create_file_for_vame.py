@@ -11,6 +11,7 @@ class create_file_for_vame:
         cfg = read_config(config_file)
         self.path_files = os.path.join(cfg['project_path'], 'videos', 'pose_estimation')
         self._filenames = cfg['video_sets']
+        self._feature_type = cfg['feature_type']  #'absolute', 'relative' or 'all'
         self._upper_tube_all = upper_tube
         self._lower_tube_all = lower_tube
         self._sheetname = sheetname
@@ -56,24 +57,37 @@ class create_file_for_vame:
            #interpolate before removing middle
            updated_df = self.interpolate_nan_data(updated_df) 
            
-           relative_df = updated_df.copy()
-           absolute_df = updated_df.copy()
+          
            
-           #get relative features normalized by mole size
-           relative_df = self.remove_middle(relative_df)
-           relative_df = self.remove_columns_with_middle(relative_df)
-           #add suffix _rel
-           relative_df.columns = [relative_df.columns[0]] + [col + '_rel' for col in relative_df.columns[1:]]
-
-           #get absolute features 
-           absolute_df = self.normalize_absolute(absolute_df)
-           #add _abs suffix
-           absolute_df.columns = [absolute_df.columns[0]] + [col + '_abs' for col in absolute_df.columns[1:]]
-
-
-
-           #concatenate the 2 files
-           updated_df_total = pd.merge(absolute_df, relative_df, on = "original_frames")
+           if self._feature_type == 'relative':
+                relative_df = updated_df.copy()
+                #get relative features normalized by mole size
+                relative_df = self.remove_middle(relative_df)
+                relative_df = self.remove_columns_with_middle(relative_df)
+                #add suffix _rel
+                relative_df.columns = [relative_df.columns[0]] + [col + '_rel' for col in relative_df.columns[1:]]
+                updated_df_total = relative_df
+           elif self._feature_type == 'absolute':
+                absolute_df = updated_df.copy()
+                #get absolute features 
+                absolute_df = self.normalize_absolute(absolute_df)
+                #add _abs suffix
+                absolute_df.columns = [absolute_df.columns[0]] + [col + '_abs' for col in absolute_df.columns[1:]]
+                updated_df_total = absolute_df
+           elif self._feature_type == 'all':
+                relative_df = updated_df.copy()
+                absolute_df = updated_df.copy()
+                #get relative features normalized by mole size
+                relative_df = self.remove_middle(relative_df)
+                relative_df = self.remove_columns_with_middle(relative_df)
+                #add suffix _rel
+                relative_df.columns = [relative_df.columns[0]] + [col + '_rel' for col in relative_df.columns[1:]]
+                #get absolute features 
+                absolute_df = self.normalize_absolute(absolute_df)
+                #add _abs suffix
+                absolute_df.columns = [absolute_df.columns[0]] + [col + '_abs' for col in absolute_df.columns[1:]]
+                #concatenate the 2 files
+                updated_df_total = pd.merge(absolute_df, relative_df, on = "original_frames")
            
            self._filename = os.path.join(self.path_files,(f + '.csv'))
            self.save_as_csv(updated_df_total)

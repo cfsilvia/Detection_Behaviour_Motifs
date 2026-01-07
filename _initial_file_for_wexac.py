@@ -78,7 +78,7 @@ def main_menu(data):
 if __name__ == "__main__":
     
     user_data = {}
-    user_data['choice'] = '1'  
+    user_data['choice'] = '14'  
     user_data['working_directory'] = '/home/labs/kimchi/cfsilvia/Blind_mole/Motifs_Detection/' 
     user_data['project']='BMR-VAME-Project'
     user_data['videos'] = ['/home/labs/kimchi/cfsilvia/Blind_mole/Motifs_Detection//original_data/BMR10_with_landmarks_left.xlsx']  # it is inside the working directory in original_data and the video in original_videos
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     user_data['width_mole'] = [579]
     user_data['height_mole'] = [164]
    
-    user_data['config'] = '/home/labs/kimchi/cfsilvia/Blind_mole/Motifs_Detection/' + 'BMR-VAME-Project-Jan1-2026' + '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME/' + 'BMR10-VAME-Project-Jul24-2025' + '/config.yaml'
+    user_data['config'] = '/home/labs/kimchi/cfsilvia/Blind_mole/Motifs_Detection/' + 'BMR-VAME-Project-Jan6-2026' + '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME/' + 'BMR10-VAME-Project-Jul24-2025' + '/config.yaml'
     
     #user_data['labels_file'] = r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Nov19-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\10_km_label_BMR10_with_landmarks_left.npy" #r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Jul24-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\10_km_label_BMR10_with_landmarks_left.npy"
     user_data['fps'] = 24.00

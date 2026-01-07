@@ -35,6 +35,7 @@ def create_config_template():
     model_name:
     n_cluster:
     pose_confidence: 
+    feature_type:
     \n
 # Project path and videos
     project_path:
@@ -192,6 +193,7 @@ def update_config(config):
         cfg_file['project_path']=str(project_path)+'/'
         cfg_file['test_fraction']=.1
         cfg_file['video_sets']=video_names
+        cfg_file['feature_type']='all'  #other option could be 'absolute' or 'relative'
         cfg_file['all_data']='yes'
         cfg_file['load_data']='-PE-seq-clean'
         cfg_file['anneal_function']='linear'
