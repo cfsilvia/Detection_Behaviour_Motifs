@@ -85,7 +85,7 @@ class ReconstructionGUI(QWidget):
             
             # Select feature and flatten
             y_orig = orig[idx,:].flatten()
-            y_recon = recon[idx,].flatten()
+            y_recon = recon[idx,:].flatten()
 
             # Ensure same length
             min_len = min(len(y_orig), len(y_recon))

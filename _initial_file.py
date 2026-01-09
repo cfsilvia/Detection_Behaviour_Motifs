@@ -36,12 +36,12 @@ def main_menu(data):
 
         case '8':
         #     #do umap over the latent space either to each experiment or all together
-             obj = vame.umap_visualization_silvia(data['config'],"all")
+             obj = vame.umap_visualization_silvia(data['config'],True,"BMR10_with_landmarks_left") #add manual data for True
              obj("motif") #argument could be: blank nothing or "motif"
 
         case '9':
         #     #find motifs on the movies
-            obj = vame.cluster_latent_space_silvia(data['config'],"BMR2_with_landmarks_left")
+            obj = vame.cluster_latent_space_silvia(data['config'],"BMR10_with_landmarks_left")
             obj() #commands to add : "cluster", "usage_motifs", "find_motifs_on_the_movies"
         # case '8':#not used
         #     #Create motif videos to get insights about the fine grained poses
@@ -68,7 +68,10 @@ def main_menu(data):
                obj = vame.plot_feature_reconstruction(data['config'])
                obj()
 
-
+        case '15':
+              #add motifs marked by user
+              obj = vame.add_user_motifs(data['config'])
+              obj('BM_snout_y_rel')  #name of the feature to plot with the motifs
 
         case _:
              return "Invalid option"
@@ -78,7 +81,7 @@ def main_menu(data):
 if __name__ == "__main__":
     
     user_data = {}
-    user_data['choice'] = '2'  
+    user_data['choice'] = '8'  
     user_data['working_directory'] = 'D:/Silvia/Data/28_12_2025/' 
     user_data['project']='BMR-VAME-Project'
     user_data['videos'] = ['D:/Silvia/Data/28_12_2025/original_data/BMR10_with_landmarks_left.xlsx']  # it is inside the working directory in original_data and the video in original_videos

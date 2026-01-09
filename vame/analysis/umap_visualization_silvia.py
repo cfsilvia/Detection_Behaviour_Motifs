@@ -62,11 +62,8 @@ LABEL_COLORS_28 = {
 
 
 
-
-
-
 class umap_visualization_silvia:
-    def __init__(self,config,exp_file = None):
+    def __init__(self,config,add_manual_data,exp_file = None ):
        #read config file
        config_file = Path(config).resolve()
        cfg = read_config(config_file)
@@ -76,6 +73,7 @@ class umap_visualization_silvia:
        self.parameterization = cfg['parameterization']
        self.project_path = cfg['project_path']
        self.file_exp = cfg['video_sets']
+       self.add_manual_data = add_manual_data
        if (exp_file != None) and (exp_file != 'all'):
          idx = (cfg['video_sets']).index(exp_file)
 
@@ -84,6 +82,7 @@ class umap_visualization_silvia:
          self.save_data = os.path.join(cfg['project_path'],"results",self.file_exp[idx],self.model_name,self.parameterization+'-'+str(self.n_cluster),"")
          self.file_labels = os.path.join(self.save_data,str(self.n_cluster)+'_km_label_'+ self.file_exp[idx] + '.npy')
          self.umap_without_labels = os.path.join(self.save_data,str(self.n_cluster)+'_umap_without_label_number_'+ self.file_exp[idx] + '.pdf')
+         self.umap_without_labels_manual = os.path.join(self.save_data,str(self.n_cluster)+'_umap_without_label_number_manuallabels_'+ self.file_exp[idx] + '.pdf')
          self.umap_with_labels = os.path.join(self.save_data,str(self.n_cluster)+'_umap_with_label_number_'+ self.file_exp[idx] + '.pdf')
          self.number_file = idx
        else:
@@ -95,6 +94,10 @@ class umap_visualization_silvia:
        self.min_dist=cfg['min_dist']
        self.n_neighbors=cfg['n_neighbors']
        self.random_state = cfg['random_state']
+
+       if self.add_manual_data:
+            self.output_data = os.path.join(cfg['project_path'], 'videos', 'pose_estimation','labels_manually_' + cfg['video_sets'][0] + '.npy')
+            self.label_data = np.load(self.output_data)
 
     def  __call__(self, label = None):
         match self.value:
@@ -129,6 +132,8 @@ class umap_visualization_silvia:
 
                     self.umap_label_vis(embed,motif_label)
         
+                
+                   
 
     #################################################################################    
 
@@ -181,6 +186,12 @@ class umap_visualization_silvia:
 
 
          sc = ax.scatter(embed[:self.num_points, 0], embed[:self.num_points, 1], c=label[:self.num_points], cmap = cmap, norm=norm, s=10, alpha=0.7, edgecolors='none')
+         
+         if self.add_manual_data:
+             # Overlay manual motif labels
+             motif_labels = self.label_data[:, 2]  # Assuming the third column contains motif labels
+             motif_indices = np.where(motif_labels > 0)[0]
+             ax.scatter(embed[motif_indices, 0], embed[motif_indices, 1], c='black', marker = 'x', s=30, linewidths=0.5,alpha = 0.6, label='Manual Motifs')
 
          # Add colorbar with cluster ticks
          cbar = plt.colorbar(sc, ax=ax, boundaries=np.arange(-0.5, self.n_cluster + 0.5, 1))
@@ -193,7 +204,10 @@ class umap_visualization_silvia:
          ax.set_title("2D Embedding Scatter Plot")
 
          ax.grid(False)
-         fig.savefig(self.umap_without_labels , format = "pdf")
+         if self.add_manual_data:
+            fig.savefig(self.umap_without_labels_manual, format = "pdf")
+         else:
+            fig.savefig(self.umap_without_labels , format = "pdf")
 
 
          for cluster_id in range(self.n_cluster):

@@ -38,6 +38,6 @@ from vame.util.create_file_for_vame import create_file_for_vame
 from vame.util.auxiliary import read_config
 from vame.analysis.plot_losses import plot_losses
 from vame.Gui.plot_feature_reconstruction import plot_feature_reconstruction
-
+from vame.Auxiliary_functions.add_user_motifs import add_user_motifs
 
 
