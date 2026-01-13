@@ -12,3 +12,4 @@ import sys
 sys.dont_write_bytecode = True
 
 from vame.Gui.plot_feature_reconstruction import plot_feature_reconstruction
+from vame.Gui.motif_marker_app import MotifMarkerApp

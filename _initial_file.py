@@ -72,6 +72,12 @@ def main_menu(data):
               #add motifs marked by user
               obj = vame.add_user_motifs(data['config'])
               obj('BM_snout_y_rel')  #name of the feature to plot with the motifs
+        
+        case '16':
+              #plot data with the motifs found by vame
+                  obj = vame.MotifMarkerApp(data['config'])
+                  obj()
+        
 
         case _:
              return "Invalid option"
@@ -81,10 +87,10 @@ def main_menu(data):
 if __name__ == "__main__":
     
     user_data = {}
-    user_data['choice'] = '8'  
+    user_data['choice'] = '16'  
     user_data['working_directory'] = 'D:/Silvia/Data/28_12_2025/' 
-    user_data['project']='BMR-VAME-Project'
-    user_data['videos'] = ['D:/Silvia/Data/28_12_2025/original_data/BMR10_with_landmarks_left.xlsx']  # it is inside the working directory in original_data and the video in original_videos
+    user_data['project']='BMR-VAME-Project-relative-window-50-latent'
+    user_data['videos'] = ['D:/Silvia/Data/28_12_2025/original_data/One_feature_BMR10_with_landmarks_left.xlsx']  # it is inside the working directory in original_data and the video in original_videos
 
    # user_data['original_data'] = 'D:/Silvia/Data/Data_for_vame/BMR10/VAME/BMR10_with_landmarks_left.xlsx' #'U:/Users/Ruthi/2025/BMR10/VAME/BMR10_with_landmarks_left.xlsx'
     user_data['sheetname'] = 'BMR'
@@ -95,7 +101,7 @@ if __name__ == "__main__":
     user_data['width_mole'] = [579]
     user_data['height_mole'] = [164]
    
-    user_data['config'] = 'D:/Silvia/Data/28_12_2025/' + 'BMR-VAME-Project-Jan7-2026' + '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME/' + 'BMR10-VAME-Project-Jul24-2025' + '/config.yaml'
+    user_data['config'] = 'D:/Silvia/Data/28_12_2025/' + 'BMR-VAME-Project-relative-window-50-latent-16-Jan11-2026' + '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME/' + 'BMR10-VAME-Project-Jul24-2025' + '/config.yaml'
     
     #user_data['labels_file'] = r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Nov19-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\10_km_label_BMR10_with_landmarks_left.npy" #r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Jul24-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\10_km_label_BMR10_with_landmarks_left.npy"
     user_data['fps'] = 24.00
