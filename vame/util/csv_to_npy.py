@@ -15,6 +15,8 @@ import pandas as pd
 
 from pathlib import Path
 from vame.util.auxiliary import read_config
+from scipy.signal import savgol_filter
+import matplotlib.pyplot as plt
 
 def nan_helper(y):
     return np.isnan(y), lambda z: z.nonzero()[0] 
@@ -82,10 +84,30 @@ def csv_to_numpy(config):
             
         # concatenate and drop confidence columns
         positions = np.concatenate(pose_list, axis=1)        # shape (T, 3*n_bodyparts)
-        final_positions = positions.reshape(-1, n_bodyparts, 3)[:, :, :2].reshape(-1, 2*n_bodyparts)
+        final_positions= positions.reshape(-1, n_bodyparts, 3)[:, :, :2].reshape(-1, 2*n_bodyparts)
+       
+
+        #normalization
+        # mean = final_positions .mean(axis=0, keepdims=True)
+        # std = final_positions .std(axis=0, keepdims=True)
+
+        #final_positions_norm = (final_positions - mean) / std
 
         # save the final_positions array with np.save()
         np.save(os.path.join(path_to_file,'data',file,file+"-PE-seq.npy"), final_positions.T)
         print("conversion from DeepLabCut csv to numpy complete...") #each row is a feature without the score(21 features and ~23000 data)
 
     print("Your data is now in right format and you can call vame.create_trainset()")
+
+#############
+'''
+smoothing filter
+is smoothing each feature separately
+
+'''
+def savgol_pose(pose, window=11, poly=3):
+    out = pose.copy()
+    for k in range(pose.shape[1]):
+        out[:, k] = savgol_filter(pose[:, k], window, poly)
+    return out
+

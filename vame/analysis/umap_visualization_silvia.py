@@ -75,7 +75,8 @@ class umap_visualization_silvia:
        self.file_exp = cfg['video_sets']
        self.add_manual_data = add_manual_data
        if (exp_file != None) and (exp_file != 'all'):
-         idx = (cfg['video_sets']).index(exp_file)
+         #idx = (cfg['video_sets']).index(exp_file)
+         idx =0    
 
          file_1 = "latent_vector_" + self.file_exp[idx] + ".npy"
          self.file_latent_vector = os.path.join(self.project_path,"results", self.file_exp[idx], self.model_name,self.parameterization+'-'+str(self.n_cluster), file_1 )
@@ -84,6 +85,7 @@ class umap_visualization_silvia:
          self.umap_without_labels = os.path.join(self.save_data,str(self.n_cluster)+'_umap_without_label_number_'+ self.file_exp[idx] + '.pdf')
          self.umap_without_labels_manual = os.path.join(self.save_data,str(self.n_cluster)+'_umap_without_label_number_manuallabels_'+ self.file_exp[idx] + '.pdf')
          self.umap_with_labels = os.path.join(self.save_data,str(self.n_cluster)+'_umap_with_label_number_'+ self.file_exp[idx] + '.pdf')
+         self.umap_without_motifs = os.path.join(self.save_data,str(self.n_cluster)+'_umap_without_motifs_'+ self.file_exp[idx] + '.pdf')
          self.number_file = idx
        else:
            self.files = self.join_all_files(cfg['video_sets'])
@@ -164,7 +166,7 @@ class umap_visualization_silvia:
 
          ax.grid(False)
 
-         fig.savefig(self.umap_without_labels, format = "pdf")
+         fig.savefig(self.umap_without_motifs, format = "pdf")
 
          plt.show()
 

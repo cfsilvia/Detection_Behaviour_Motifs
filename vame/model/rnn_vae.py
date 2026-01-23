@@ -49,7 +49,6 @@ def cluster_loss(H, kloss, lmbda, batch_size):
     loss = torch.sum(sv)
     return lmbda*loss
 
-
 def kullback_leibler_loss(mu, logvar):
     # see Appendix B from VAE paper:
         # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014

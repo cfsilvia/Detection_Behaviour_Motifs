@@ -44,16 +44,16 @@ class create_file_for_vame:
         df_original = self.read_excel(f)
         df = df_original.copy()
         if df is not None:
-           #all the rows with the animal at the exit of the cage
+           #remove outside the tube
+           updated_df = self.remove_data_outside_tube(df)
 
-           #remove nan non detected
-           updated_df = self.remove_non_detected_animal(df)
+           #remove nan non detected- remove all the rows with nan
+           updated_df = self.remove_non_detected_animal(updated_df)
            #remove columns nothing detected through all the frames
            updated_df = self.remove_all_zero_values(updated_df)
            #replace 0 nodetection with nan
            updated_df = self.fill_no_detection(updated_df)
-           #remove outside the tube
-           updated_df = self.remove_data_outside_tube(updated_df)
+          
            #interpolate before removing middle
            updated_df = self.interpolate_nan_data(updated_df) 
            
@@ -119,15 +119,24 @@ class create_file_for_vame:
         return updated_df
     
     '''
-    Remove the y which are outside the tube
+    Remove the y which are outside the tube #Remove all the frames in which the data is outside the tube
     '''
     def remove_data_outside_tube(self,df):
         updated_df = df.copy()
         for col in updated_df.columns:
-            if  '_y' in col.lower():
-                # Replace values greater than the threshold with NaN
-                updated_df[col] = df[col].mask(df[col] > self._lower_tube, np.nan)
-                updated_df[col] = df[col].mask(df[col] < self._upper_tube, np.nan)
+            if '_y' in col.lower():
+                # Find the base name (everything before '_y')
+                y_pos = col.lower().rfind('_y')
+                base_name = col[:y_pos]
+                
+                # Find rows where the y value is outside the tube limits
+                outside_mask = (df[col] > self._lower_tube) | (df[col] < self._upper_tube)
+                
+                # For all columns that start with the same base name, set NaN where outside_mask is True
+                for other_col in updated_df.columns:
+                    if other_col.lower().startswith(base_name.lower() + '_'):
+                        updated_df.loc[outside_mask, other_col] = np.nan
+        
         return updated_df
     '''
     Remove the middle and divide by size ofthe blind mole. I will get between -1 to 1 for either x or y
@@ -137,8 +146,10 @@ class create_file_for_vame:
         for col in  df.columns:
             if '_x' in col.lower():
                 df_updated[col] = (df[col] - df['BMR_Middle_x'])/self._width_mole
+                #df_updated[col] = (df[col] - df['BMR_Middle_x'])
             elif '_y' in col.lower():
-                df_updated[col] = (df['BMR_Middle_y'] -df[col])/self._height_mole
+                 df_updated[col] = (df['BMR_Middle_y'] -df[col])/self._height_mole
+                #df_updated[col] = (df['BMR_Middle_y'] -df[col])
         return df_updated
     
     '''

@@ -14,6 +14,7 @@ from pathlib import Path
 
 from hmmlearn import hmm
 from sklearn.cluster import KMeans
+import hdbscan
 
 from vame.util.auxiliary import read_config
 from vame.model.rnn_model import RNN_VAE
@@ -147,6 +148,13 @@ class  pose_segmentation:
             label = hmm_model.predict(latent_vector_cat)
             save_data = os.path.join(self.cfg['project_path'], "results", "")
             with open(save_data+"hmm_trained.pkl", "wb") as file: pickle.dump(hmm_model, file)
+        elif self.parameterization == "hdbscan":
+            print("Using HDBSCAN as parameterization!")
+            hdbscan_model = hdbscan.HDBSCAN(min_cluster_size=self.n_cluster, prediction_data=True)
+            label = hdbscan_model.fit_predict(latent_vector_cat)
+            clust_center = np.array([])
+            save_data = os.path.join(self.cfg['project_path'], "results", "")
+            with open(save_data+"hdbscan_trained.pkl", "wb") as file: pickle.dump(hdbscan_model, file)
   
         return label, clust_center
     

@@ -49,11 +49,11 @@ def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
         fig, axs = plt.subplots(2, 5)
         fig.suptitle('Reconstruction [top] and future prediction [bottom] of input sequence')
         for i in range(5):
-            axs[0,i].plot(data_orig[i,:,49], color='k', label='Sequence Data')
-            axs[0,i].plot(data_tilde[i,:,49], color='r', linestyle='dashed', label='Sequence Reconstruction')
+            axs[0,i].plot(data_orig[i,:,1], color='k', label='Sequence Data')
+            axs[0,i].plot(data_tilde[i,:,1], color='r', linestyle='dashed', label='Sequence Reconstruction')
 
-            axs[1,i].plot(fut_orig[i,:,49], color='k')
-            axs[1,i].plot(fut[i,:,49], color='r', linestyle='dashed')
+            axs[1,i].plot(fut_orig[i,:,1], color='k')
+            axs[1,i].plot(fut[i,:,1], color='r', linestyle='dashed')
         axs[0,0].set(xlabel='time steps', ylabel='reconstruction')
         axs[1,0].set(xlabel='time steps', ylabel='predction')
         fig.savefig(os.path.join(filepath,"evaluate",'Future_Reconstruction.png'))
@@ -62,8 +62,8 @@ def plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name,
         fig, ax1 = plt.subplots(1, 5)
         for i in range(5):
             fig.suptitle('Reconstruction of input sequence')
-            ax1[i].plot(data_orig[i,:,49], color='k', label='Sequence Data')
-            ax1[i].plot(data_tilde[i,:,49], color='r', linestyle='dashed', label='Sequence Reconstruction')
+            ax1[i].plot(data_orig[i,:,1], color='k', label='Sequence Data')
+            ax1[i].plot(data_tilde[i,:,1], color='r', linestyle='dashed', label='Sequence Reconstruction')
         fig.set_tight_layout(True)
         if not suffix:
             fig.savefig(os.path.join(filepath,'evaluate','Reconstruction_'+model_name+'.png'), bbox_inches='tight')

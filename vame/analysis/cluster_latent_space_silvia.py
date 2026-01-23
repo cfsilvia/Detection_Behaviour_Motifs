@@ -112,8 +112,8 @@ class cluster_latent_space_silvia:
             else:
                 text = str(int(number_serie)) + ' Frame  ' + str(self.cluster_start + f )
             font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scale = 4
-            thickness = 8
+            font_scale = 0.5 #4
+            thickness = 2 #8
             color = (0, 0, 255)  # Red text (BGR format)
             (text_width, text_height), _ = cv2.getTextSize(text, font, font_scale, thickness)
             frame_height, frame_width = frame.shape[:2]
