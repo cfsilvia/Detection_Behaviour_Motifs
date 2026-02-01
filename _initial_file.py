@@ -36,8 +36,8 @@ def main_menu(data):
 
         case '8':
         #     #do umap over the latent space either to each experiment or all together
-             obj = vame.umap_visualization_silvia(data['config'],False,"BMR_RY1_with_landmarks") #add manual data for True
-             obj("motif") #argument could be: blank nothing or "motif"
+             obj = vame.umap_visualization_silvia(data['config'],False,"BMR_RY1_with_landmarks") #add manual data for True# add if latent space go trhough 
+             obj() #argument could be: blank nothing or "motif"
 
         case '9':
         #     #find motifs on the movies
@@ -78,7 +78,18 @@ def main_menu(data):
                   obj = vame.MotifMarkerApp(data['config'])
                   obj()
         
+        case '17':
+                #do pca on the latent space
+                obj = vame.pose_segmentation_pca(data['config'])
+                obj()
 
+        case '18':
+           obj = vame.umap_visualization_pca_latent_Space(data['config'],"pca_13_hmm_7") #add manual data for True# add if latent space go trhough 
+           obj("motif") #argument could be: blank nothing or "motif"  
+
+        case '19':
+             obj = vame.cluster_latent_space_pca_latent_Space(data['config'],"pca_13_hmm_7")
+             obj() #commands to add : "cluster", "usage_motifs", "find_motifs_on_the_movies"
         case _:
              return "Invalid option"
 
@@ -87,25 +98,25 @@ def main_menu(data):
 if __name__ == "__main__":
     
     user_data = {}
-    user_data['choice'] = '16'
+    user_data['choice'] = '4'
 
     user_data['working_directory'] = 'D:/Silvia/Data/BlindMole/shaker_analysis_60fps/'  # 'D:/Silvia/Data/BlindMole/shaker_analysis_60fps/' 
-    user_data['project']='BMR-VAME-Project-relative-window-30fps-window-20-latent-30'
-    user_data['videos'] = ['D:/Silvia/Data/BlindMole/shaker_analysis_60fps/original_data/BMR_RY1_with_landmarks.xlsx']  # it is inside the working directory in original_data and the video in original_videos
+    user_data['project']='BMR-VAME-Project-relative-window-60fps-window-10-latent-ValidationData'
+    user_data['videos'] = ['D:/Silvia/Data/BlindMole/shaker_analysis_60fps/original_data/BMR_Ry2_200825_S_with_landmarks_right.xlsx']  # it is inside the working directory in original_data and the video in original_videos
 
    # user_data['original_data'] = 'D:/Silvia/Data/Data_for_vame/BMR10/VAME/BMR10_with_landmarks_left.xlsx' #'U:/Users/Ruthi/2025/BMR10/VAME/BMR10_with_landmarks_left.xlsx'
     user_data['sheetname'] = 'BMR'
-    user_data['upper_tube'] = [330] #[330] #for RY1#[1269] #for bmr10
-    user_data['lower_tube'] = [413] #[413] #[1454]
-    user_data['minimum_x'] = [354] #[354] #[983]
-    user_data['maximum_x'] = [857] #[857] #[2211]
-    user_data['width_mole'] = [222] # [222] #[579]
-    user_data['height_mole'] = [64] # [64] #[164]
+    user_data['upper_tube'] = [335] #[330] #[330] #RY2 #for RY1#[1269] #for bmr10
+    user_data['lower_tube'] = [409]#[413] #[413] #[1454]
+    user_data['minimum_x'] = [450] #[354] #[354] #[983]
+    user_data['maximum_x'] = [967] #[857] #[857] #[2211]
+    user_data['width_mole'] = [194] #[222] # [222] #[579]
+    user_data['height_mole'] = [68] #[64] # [64] #[164]
    
-    user_data['config'] = 'D:/Silvia/Data/BlindMole/shaker_analysis_60fps/BMR-VAME-Project-relative-window-30fps-window-20-latent-30-Jan22-2026' + '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME+ '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME/' + 'BMR10-VAME-Project-Jul24-2025' + '/config.yaml'
+    user_data['config'] = 'D:/Silvia/Data/BlindMole/shaker_analysis_60fps/BMR-VAME-Project-relative-window-60fps-window-10-latent-ValidationData-Feb1-2026' + '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME+ '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME/' + 'BMR10-VAME-Project-Jul24-2025' + '/config.yaml'
     
     #user_data['labels_file'] = r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Nov19-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\10_km_label_BMR10_with_landmarks_left.npy" #r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Jul24-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\10_km_label_BMR10_with_landmarks_left.npy"
-    user_data['fps'] = 24.00
+    user_data['fps'] = 60.00
     #user_data['file_etogrhams'] = r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Nov19-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\ethogram_aligned.csv" #r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Jul24-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\ethogram_aligned.csv"
     
     # user_data['directory_results'] = r"D:\Silvia\Data\Data_for_vame\BMR10\VAME\BMR10-VAME-Project-Nov25-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\"

@@ -134,7 +134,7 @@ the idea to model in chunks to 30 frames and then to reconstruct the full sequen
 def reconstruct_full_sequence(cfg, model, model_name, device, suffix=None):
     print("Reconstructing full sequence...")
     path_to_file = os.path.join(cfg['project_path'], "data", "train")
-    data_path = os.path.join(path_to_file, 'train_seq.npy')
+    data_path = os.path.join(path_to_file, 'test_seq.npy')
     
     if not os.path.exists(data_path):
         print(f"File {data_path} not found.")
@@ -255,7 +255,7 @@ def eval_temporal(cfg, use_gpu, model_name, snapshot=None, suffix=None):
     
     model.eval() #toggle evaluation mode
     #change to train data instead of test data
-    testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='train_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW, normalize=normalize)
+    testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "train",""), data='test_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW, normalize=normalize)
     test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)
 
     plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name, FUTURE_DECODER, FUTURE_STEPS, suffix=suffix, device=device)
@@ -279,6 +279,7 @@ def evaluate_model(config, use_snapshots=False):
     config_file = Path(config).resolve()
     cfg = read_config(config_file)
     model_name = cfg['model_name']
+    
 
     if not os.path.exists(os.path.join(cfg['project_path'],"model","evaluate")):
         os.mkdir(os.path.join(cfg['project_path'],"model","evaluate"))

@@ -40,4 +40,6 @@ from vame.analysis.plot_losses import plot_losses
 from vame.Gui.plot_feature_reconstruction import plot_feature_reconstruction
 from vame.Auxiliary_functions.add_user_motifs import add_user_motifs
 from vame.Gui.motif_marker_app import MotifMarkerApp
-
+from vame.analysis import pose_segmentation_pca
+from vame.analysis import umap_visualization_pca_latent_Space
+from vame.analysis import cluster_latent_space_pca_latent_Space

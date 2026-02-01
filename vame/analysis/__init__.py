@@ -22,6 +22,7 @@ from vame.analysis.cluster_latent_space_silvia import cluster_latent_space_silvi
 from vame.analysis.umap_visualization_silvia import  umap_visualization_silvia
 from vame.analysis.community_analysis_silvia import  community_analysis_silvia
 from vame.analysis.tree_hierarchy import graph_to_tree, draw_tree, traverse_tree_cutline
-
-
+from vame.analysis.pose_segmentation_pca import pose_segmentation_pca
+from vame.analysis.umap_visualization_pca_latent_Space import umap_visualization_pca_latent_Space
+from vame.analysis.cluster_latent_space_pca_latent_Space import cluster_latent_space_pca_latent_Space
 
