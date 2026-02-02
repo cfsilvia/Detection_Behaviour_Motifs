@@ -28,20 +28,20 @@ def main_menu(data):
               vame.train_model(data['config'])
         case '6':
               # # Evaluate model
-              vame.evaluate_model(data['config'])
+              vame.evaluate_model(data['config'],False, True) #second argument use snapshots, third use pretrained model
         case '7':
         #      # # Segment motifs/pose
-              obj = vame.pose_segmentation(data['config'])
+              obj = vame.pose_segmentation(data['config'],True, True) #add use pretrained true or false- use also the hmm trained model to compare the motifs
               obj()
 
         case '8':
         #     #do umap over the latent space either to each experiment or all together
-             obj = vame.umap_visualization_silvia(data['config'],False,"BMR_RY1_with_landmarks") #add manual data for True# add if latent space go trhough 
-             obj() #argument could be: blank nothing or "motif"
+             obj = vame.umap_visualization_silvia(data['config'],False,"BMR_Ry2_200825_S_with_landmarks_right") #add manual data for True# add if latent space go trhough 
+             obj("motif") #argument could be: blank nothing or "motif"
 
         case '9':
         #     #find motifs on the movies
-            obj = vame.cluster_latent_space_silvia(data['config'],"BMR_RY1_with_landmarks")
+            obj = vame.cluster_latent_space_silvia(data['config'],"BMR_Ry2_200825_S_with_landmarks_right")
             obj() #commands to add : "cluster", "usage_motifs", "find_motifs_on_the_movies"
         # case '8':#not used
         #     #Create motif videos to get insights about the fine grained poses
@@ -90,6 +90,7 @@ def main_menu(data):
         case '19':
              obj = vame.cluster_latent_space_pca_latent_Space(data['config'],"pca_13_hmm_7")
              obj() #commands to add : "cluster", "usage_motifs", "find_motifs_on_the_movies"
+        case '20':
         case _:
              return "Invalid option"
 
@@ -98,7 +99,7 @@ def main_menu(data):
 if __name__ == "__main__":
     
     user_data = {}
-    user_data['choice'] = '4'
+    user_data['choice'] = '9'
 
     user_data['working_directory'] = 'D:/Silvia/Data/BlindMole/shaker_analysis_60fps/'  # 'D:/Silvia/Data/BlindMole/shaker_analysis_60fps/' 
     user_data['project']='BMR-VAME-Project-relative-window-60fps-window-10-latent-ValidationData'

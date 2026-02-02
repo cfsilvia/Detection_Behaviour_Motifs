@@ -24,13 +24,17 @@ import matplotlib.pyplot as plt
 
 ###########################################
 class  pose_segmentation:
-    def __init__(self,config):
+    def __init__(self,config,use_pretrained = False, use_hmm_trained = False):
         config_file = Path(config).resolve()
         self.cfg = read_config(config_file)
         self.model_name = self.cfg['model_name']
         self.n_cluster = self.cfg['n_cluster']
         self.parameterization = self.cfg['parameterization']
         self.files = self.cfg['video_sets']
+        self.pretrained_model_path = self.cfg['pretrained_model']
+        self.use_pretrained = use_pretrained
+        self.use_hmm_trained = use_hmm_trained
+        self.pretrained_model_path_hmm = self.cfg['hmm_trained']
         
         print('Pose segmentation for VAME model: %s \n' %self.model_name)
 
@@ -90,8 +94,11 @@ class  pose_segmentation:
         model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1, 
                                 hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder, 
                                 dropout_rec, dropout_pred, softplus).cuda()
-        
-        model.load_state_dict(torch.load(os.path.join(self.cfg['project_path'],'model','best_model',self.model_name+'_'+self.cfg['Project']+'.pkl')))
+        if not self.use_pretrained:
+           model.load_state_dict(torch.load(os.path.join(self.cfg['project_path'],'model','best_model',self.model_name+'_'+self.cfg['Project']+'.pkl')))
+        else:
+           model.load_state_dict(torch.load(self.pretrained_model_path))
+
         model.eval()
 
         return model
@@ -134,27 +141,31 @@ class  pose_segmentation:
         
         latent_vector_cat = np.concatenate(latent_vector_files, axis=0)
 
-        if self.parameterization == "kmeans":
+        if self.parameterization == "kmeans" and not self.use_hmm_trained:
             print("Using kmeans as parameterization!")
             kmeans = KMeans(init='k-means++', n_clusters = self.n_cluster, random_state=42, n_init=20).fit(latent_vector_cat)
             kmeans = KMeans(init='k-means++', n_clusters=self.n_cluster, random_state=random_state, n_init=n_init).fit(latent_vector_cat)
             clust_center = kmeans.cluster_centers_
             label = kmeans.predict(latent_vector_cat)
             label = kmeans.labels_
-        elif self.parameterization == "hmm":
+        elif self.parameterization == "hmm" and not self.use_hmm_trained:
             print("Using a HMM as parameterization!")
             hmm_model = hmm.GaussianHMM(n_components = self.n_cluster, covariance_type="full", n_iter=100)
             hmm_model.fit(latent_vector_cat)
             label = hmm_model.predict(latent_vector_cat)
             save_data = os.path.join(self.cfg['project_path'], "results", "")
             with open(save_data+"hmm_trained.pkl", "wb") as file: pickle.dump(hmm_model, file)
-        elif self.parameterization == "hdbscan":
+        elif self.parameterization == "hdbscan" and not self.use_hmm_trained:
             print("Using HDBSCAN as parameterization!")
             hdbscan_model = hdbscan.HDBSCAN(min_cluster_size=self.n_cluster, prediction_data=True)
             label = hdbscan_model.fit_predict(latent_vector_cat)
             clust_center = np.array([])
             save_data = os.path.join(self.cfg['project_path'], "results", "")
             with open(save_data+"hdbscan_trained.pkl", "wb") as file: pickle.dump(hdbscan_model, file)
+        elif self.parameterization == "hmm" and self.use_hmm_trained:
+            print("Using a pre-trained HMM as parameterization!")
+            with open(self.pretrained_model_path_hmm, "rb") as file: hmm_model = pickle.load(file)
+            label = hmm_model.predict(latent_vector_cat)
   
         return label, clust_center
     

@@ -261,9 +261,120 @@ def eval_temporal(cfg, use_gpu, model_name, snapshot=None, suffix=None):
     plot_reconstruction(filepath, test_loader, seq_len_half, model, model_name, FUTURE_DECODER, FUTURE_STEPS, suffix=suffix, device=device)
     plot_loss(cfg, filepath, model_name)
     reconstruct_full_sequence(cfg, model, model_name, device, suffix)
+'''
+evaluation of validation data with pretrained model
+'''
+def eval_temporal_validation_data(cfg, use_gpu, model_name, pretrained_model_path, suffix=None):
+    SEED = 19
+    ZDIMS = cfg['zdims']
+    FUTURE_DECODER = cfg['prediction_decoder']
+    TEMPORAL_WINDOW = cfg['time_window']*2
+    FUTURE_STEPS = cfg['prediction_steps']
+    NUM_FEATURES = cfg['num_features']
+    TEST_BATCH_SIZE = 64
+    hidden_size_layer_1 = cfg['hidden_size_layer_1']
+    hidden_size_layer_2 = cfg['hidden_size_layer_2']
+    hidden_size_rec = cfg['hidden_size_rec']
+    hidden_size_pred = cfg['hidden_size_pred']
+    dropout_encoder = cfg['dropout_encoder']
+    dropout_rec = cfg['dropout_rec']
+    dropout_pred = cfg['dropout_pred']
+    softplus = cfg['softplus']
+    normalize = cfg.get('normalize_data', True)
+
+    filepath = os.path.join(cfg['project_path'],"model")
+
+    device = torch.device("cuda" if use_gpu else "cpu")
+    seq_len_half = int(TEMPORAL_WINDOW/2)
+
+    if use_gpu:
+        torch.cuda.manual_seed(SEED)
+
+    model = RNN_VAE(TEMPORAL_WINDOW,ZDIMS,NUM_FEATURES,FUTURE_DECODER,FUTURE_STEPS, hidden_size_layer_1,
+                    hidden_size_layer_2, hidden_size_rec, hidden_size_pred, dropout_encoder,
+                    dropout_rec, dropout_pred, softplus).to(device)
+    
+    load_path = pretrained_model_path
+    map_location = None if use_gpu else device
+    model.load_state_dict(torch.load(load_path, map_location=map_location))
+    
+    model.eval() #toggle evaluation mode
+    #change to validation data instead of test data
+    testset = SEQUENCE_DATASET(os.path.join(cfg['project_path'],"data", "validation",""), data='validation_seq.npy', train=False, temporal_window=TEMPORAL_WINDOW, normalize=normalize)
+    test_loader = Data.DataLoader(testset, batch_size=TEST_BATCH_SIZE, shuffle=True, drop_last=True)
+    reconstruct_full_sequence_validation_data(cfg, model, model_name, device, suffix)
+
+    
+'''reconstruct full sequence for validation data
+
+'''
+def reconstruct_full_sequence_validation_data(cfg, model, model_name, device, suffix=None):
+
+    print("Reconstructing full sequence...")
+    path_to_file = os.path.join(cfg['project_path'], "data", "validation")
+    data_path = os.path.join(path_to_file, 'validation_seq.npy')
+    
+    if not os.path.exists(data_path):
+        print(f"File {data_path} not found.")
+        return
+
+    X = np.load(data_path)
+    if X.shape[0] > X.shape[1]:
+        X = X.T
+        
+    mean_path = os.path.join(path_to_file, 'seq_mean.npy')
+    std_path = os.path.join(path_to_file, 'seq_std.npy')
+    normalize = cfg.get('normalize_data', True)
+    if normalize and os.path.exists(mean_path) and os.path.exists(std_path):
+        mean = np.load(mean_path)
+        std = np.load(std_path)
+        X_norm = (X - mean) / std
+    else:
+        X_norm = X
+
+   
+    seq_len = cfg['time_window']
+    num_features = X_norm.shape[0]
+    num_frames = X_norm.shape[1]
+    
+    remainder = num_frames % seq_len
+    pad_width = seq_len - remainder if remainder != 0 else 0
+    #fill with zeros the end 
+    X_padded = np.pad(X_norm, ((0,0), (0, pad_width)), mode='constant') if pad_width > 0 else X_norm
+        
+    X_T = X_padded.T
+    num_chunks = X_T.shape[0] // seq_len #number of full sequences of length seq_len
+    chunks = X_T.reshape(num_chunks, seq_len, num_features)
+    chunks_tensor = torch.from_numpy(chunks).float().to(device)
+    
+    reconstructions = []
+    batch_size = 128
+    
+    model.eval()
+    with torch.no_grad():
+        for i in range(0, num_chunks, batch_size):
+            batch = chunks_tensor[i:i+batch_size]
+            recon = model(batch)[0]
+            reconstructions.append(recon.cpu().numpy())
+            
+    full_recon = np.concatenate(reconstructions, axis=0)
+    full_recon = full_recon.reshape(-1, num_features).T
+    if pad_width > 0:
+        full_recon = full_recon[:, :-pad_width]
+        
+    name = f"Full_Reconstruction_{model_name}" + (f"_{suffix}" if suffix else "")
+    np.save(os.path.join(cfg['project_path'], "model", "evaluate", name + "validation_data.npy"), full_recon)
+    print(f"Saved full reconstruction to {name}.npy")
+    #add names of features
+    columns_names = extract_landmarks_names(cfg)
+    #save correlation between original and reconstructed data
+    calculate_correlation(cfg, X_norm, full_recon, model_name, suffix, columns_names)
+    # Plot example feature reconstruction
 
 
-def evaluate_model(config, use_snapshots=False):
+
+
+def evaluate_model(config, use_snapshots=False, use_pretrained=False):
     """
     Evaluation of testset.
         
@@ -296,7 +407,7 @@ def evaluate_model(config, use_snapshots=False):
         print("CUDA is not working, or a GPU is not found; using CPU!")
 
     print("\n\nEvaluation of %s model. \n" %model_name)   
-    if not use_snapshots:
+    if not use_snapshots and not use_pretrained:
         eval_temporal(cfg, use_gpu, model_name)
     elif use_snapshots:
         snapshots=os.listdir(os.path.join(cfg['project_path'],'model','best_model','snapshots'))
@@ -304,6 +415,9 @@ def evaluate_model(config, use_snapshots=False):
             fullpath = os.path.join(cfg['project_path'],"model","best_model","snapshots",snap)
             epoch=snap.split('_')[-1]
             eval_temporal(cfg, use_gpu, model_name, snapshot=fullpath, suffix='snapshot'+str(epoch))
+    elif use_pretrained:
+        pretrained_model_path = cfg['pretrained_model']
+        eval_temporal_validation_data(cfg, use_gpu, model_name, pretrained_model_path, suffix='pretrained')    
 
     print(f"You can find the results of the evaluation in '{evaluate_path}' \n"
           "OPTIONS:\n"
