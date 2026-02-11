@@ -2,6 +2,8 @@ import sys
 
 sys.path.insert(0, r"D:\Silvia\ScriptOnGithub\Detection_Behaviour_Motifs")
 import vame
+import Analysis_signal.fft_analysis as fft
+
 
 
 
@@ -31,12 +33,12 @@ def main_menu(data):
               vame.evaluate_model(data['config'],False, True) #second argument use snapshots, third use pretrained model
         case '7':
         #      # # Segment motifs/pose
-              obj = vame.pose_segmentation(data['config'],True, True) #add use pretrained true or false- use also the hmm trained model to compare the motifs
+              obj = vame.pose_segmentation(data['config'],False, False) #add use pretrained true or false- use also the hmm trained model to compare the motifs
               obj()
 
         case '8':
         #     #do umap over the latent space either to each experiment or all together
-             obj = vame.umap_visualization_silvia(data['config'],False,"BMR_Ry2_200825_S_with_landmarks_right") #add manual data for True# add if latent space go trhough 
+             obj = vame.umap_visualization_silvia(data['config'],True,"BMR10_with_landmarks_left") #add manual data for True# add if latent space go trhough 
              obj("motif") #argument could be: blank nothing or "motif"
 
         case '9':
@@ -91,6 +93,8 @@ def main_menu(data):
              obj = vame.cluster_latent_space_pca_latent_Space(data['config'],"pca_13_hmm_7")
              obj() #commands to add : "cluster", "usage_motifs", "find_motifs_on_the_movies"
         case '20':
+             obj = fft.fft_analysis(data['data_path'], data['labels_path'], data['landmarks_information_csv'], data['feature_name'] , data['label_choice'])
+             obj()
         case _:
              return "Invalid option"
 
@@ -99,7 +103,7 @@ def main_menu(data):
 if __name__ == "__main__":
     
     user_data = {}
-    user_data['choice'] = '9'
+    user_data['choice'] = '16'
 
     user_data['working_directory'] = 'D:/Silvia/Data/BlindMole/shaker_analysis_60fps/'  # 'D:/Silvia/Data/BlindMole/shaker_analysis_60fps/' 
     user_data['project']='BMR-VAME-Project-relative-window-60fps-window-10-latent-ValidationData'
@@ -114,14 +118,21 @@ if __name__ == "__main__":
     user_data['width_mole'] = [194] #[222] # [222] #[579]
     user_data['height_mole'] = [68] #[64] # [64] #[164]
    
-    user_data['config'] = 'D:/Silvia/Data/BlindMole/shaker_analysis_60fps/BMR-VAME-Project-relative-window-60fps-window-10-latent-ValidationData-Feb1-2026' + '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME+ '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME/' + 'BMR10-VAME-Project-Jul24-2025' + '/config.yaml'
+    user_data['config'] = 'D:/Silvia/Data/28_12_2025/BMR-VAME-Project-relative-window-15-Jan11-2026' + '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME+ '/config.yaml' #'U:/Users/Ruthi/2025/BMR10/VAME/' + 'BMR10-VAME-Project-Jul24-2025' + '/config.yaml'
     
     #user_data['labels_file'] = r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Nov19-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\10_km_label_BMR10_with_landmarks_left.npy" #r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Jul24-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\10_km_label_BMR10_with_landmarks_left.npy"
-    user_data['fps'] = 60.00
+    user_data['fps'] = 24.00
     #user_data['file_etogrhams'] = r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Nov19-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\ethogram_aligned.csv" #r"U:\Users\Ruthi\2025\BMR10\VAME\BMR10-VAME-Project-Jul24-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\ethogram_aligned.csv"
     
     # user_data['directory_results'] = r"D:\Silvia\Data\Data_for_vame\BMR10\VAME\BMR10-VAME-Project-Nov25-2025\results\BMR10_with_landmarks_left\VAME\hmm-10\"
     # user_data['number_clusters'] = 10
     # user_data['name_data'] = "BMR10_with_landmarks_left"
+
+    #FOR FFT ANALYSIS
+    user_data['data_path'] = r"D:\Silvia\Data\BlindMole\shaker_analysis_60fps\BMR-VAME-Project-relative-window-60fps-window-10-latent-30-Jan22-2026\data\BMR_RY1_with_landmarks\BMR_RY1_with_landmarks-PE-seq-clean.npy"
+    user_data['labels_path'] = r"D:\Silvia\Data\BlindMole\shaker_analysis_60fps\BMR-VAME-Project-relative-window-60fps-window-10-latent-30-Jan22-2026\results\BMR_RY1_with_landmarks\VAME\hmm-7\7_km_label_BMR_RY1_with_landmarks.npy"
+    user_data['landmarks_information_csv'] = r"D:\Silvia\Data\BlindMole\shaker_analysis_60fps\BMR-VAME-Project-relative-window-60fps-window-10-latent-30-Jan22-2026\videos\pose_estimation\BMR_RY1_with_landmarks.csv"
+    user_data['feature_name'] = "BM_snout_y_rel"
+    user_data['label_choice'] = 6  #which label to select for the fft
 
     main_menu(user_data)
